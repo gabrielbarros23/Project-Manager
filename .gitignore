@@ -2,8 +2,10 @@
 /dist
 /node_modules
 /build
+/src/generated
 
 taks.md
+
 
 # Logs
 logs
