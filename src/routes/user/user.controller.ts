@@ -6,7 +6,7 @@ import { Public } from 'src/decorators/public.decorator';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Post()
   @Public()
@@ -14,9 +14,9 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
-  @Get()
-  findAll() {
-    return this.userService.findAll();
+  @Get("findall")
+  async findAll() {
+    return await this.userService.findAll();
   }
 
   @Get(':id')
