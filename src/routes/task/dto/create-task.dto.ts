@@ -1,6 +1,6 @@
 import { Type } from "class-transformer";
-import { IsDate, IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, Length, ValidateNested } from "class-validator";
-import { TaskPriority } from "src/generated/prisma/enums";
+import { ArrayMinSize, ArrayNotEmpty, arrayNotEmpty, IsArray, IsDate, IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, Length, ValidateNested } from "class-validator";
+import { TaskPriority, TaskStatus } from "src/generated/prisma/enums";
 
 class ProjectConnectDTO {
   @IsInt()
@@ -68,5 +68,13 @@ export class CreateTaskDto {
   project: ProjectRelationInputDTO
 
   @IsOptional()
-  signedTo: UserRelationInputDTO
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsInt({ each: true })
+  @IsPositive({ each: true })
+  signedTo: number[]
+
+  @IsOptional()
+  @IsEnum(TaskStatus)
+  status: TaskStatus
 }

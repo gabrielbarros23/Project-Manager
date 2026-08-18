@@ -9,7 +9,10 @@ import { ProjectModule } from './routes/project/project.module';
 import { TaskModule } from './routes/task/task.module';
 
 @Module({
-  imports: [UserModule, PrismaModule, AuthModule, ProjectModule, TaskModule, ConfigModule.forRoot({ isGlobal: true, })],
+  imports: [
+    UserModule, PrismaModule, AuthModule, ProjectModule,
+    TaskModule, ConfigModule.forRoot({ isGlobal: true, })
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

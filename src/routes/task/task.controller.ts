@@ -13,8 +13,8 @@ export class TaskController {
   }
 
   @Get()
-  findAll() {
-    return this.taskService.findAll();
+  async findAll() {
+    return await this.taskService.findAll();
   }
 
   @Get(':id')

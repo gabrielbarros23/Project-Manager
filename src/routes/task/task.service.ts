@@ -7,11 +7,36 @@ import { PrismaService } from 'src/prisma.service';
 @Injectable()
 export class TaskService {
   constructor(private readonly prisma: PrismaService) { }
-  async create(createTaskDto: Prisma.TaskCreateInput) {
-    return await this.prisma.task.create({ data: createTaskDto, include: { signedTo: true, project: true } })
+  async create(createTaskDto: CreateTaskDto) {
+    return await this.prisma.task.create({
+      data: {
+        title: createTaskDto.title,
+        description: createTaskDto.description,
+        dueDate: createTaskDto.dueDate,
+        priority: createTaskDto.priority,
+        project: createTaskDto.project,
+        status: createTaskDto.status,
+        signedTo: createTaskDto.signedTo ?
+          {
+            create: createTaskDto.signedTo.map(userID => ({
+              user: {
+                connect: { id: userID }
+              }
+            }
+            ))
+
+          } : undefined
+      },
+      include: { signedTo: true, project: true }
+    })
+    // return await this.prisma.task.create({ data: createTaskDto, include: { signedTo: true, project: true } })
   }
 
-  findAll() {
+  async findAll() {
+    const tasks = await this.prisma.task.findMany({ where: {} })
+    const tasksMembers = await this.prisma.taskMembers.findMany({ where: {} })
+
+    return { tasks, tasksMembers }
     return `This action returns all task`;
   }
 

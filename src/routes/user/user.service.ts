@@ -31,6 +31,12 @@ export class UserService {
     })
   }
 
+  async userExist(userId: number) {
+    return await this.prisma.user.findUnique({
+      where: { id: userId }
+    })
+  }
+
   findOne(id: number) {
     return `This action returns a #${id} user`;
   }
