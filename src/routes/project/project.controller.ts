@@ -45,7 +45,7 @@ export class ProjectController {
       throw new BadRequestException("you can't pass the creator role to another user")
     }
 
-    return await this.projectService.addUserToProject(body);
+    return await this.projectService.modifyUserRoleToProject(body);
   }
 
   @Get()

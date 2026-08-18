@@ -74,7 +74,8 @@ export class ProjectService {
 
   async findAll() {
     return await this.prisma.project.findMany({
-      where: {}
+      where: {},
+      include:{members:true,tasks:true}
     })
   }
 
