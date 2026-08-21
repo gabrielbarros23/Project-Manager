@@ -51,7 +51,7 @@ model ProjectMembers {
   userId    Int
   projectId Int
   role      ProjectRole
-  user      User        @relation(fields: [userId], references: [id])
+  user      User        @relation(fields: [userId], references: [id], onDelete:Cascade)
   project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@id([userId, projectId])
@@ -74,7 +74,7 @@ model Task {
 model TaskMembers {
   userId Int
   taskId Int
-  user   User @relation(fields: [userId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
   task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@id([userId, taskId])
