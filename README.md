@@ -125,6 +125,7 @@ npx prisma generate
 
 ### Start the application:
 ```start
+npx prisma migrate dev
 npm run start:dev
 ```
 
