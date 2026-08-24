@@ -1,50 +1,15 @@
+import { OmitType, PartialType } from "@nestjs/mapped-types";
 import { Type } from "class-transformer";
-import { ArrayMinSize, ArrayNotEmpty, arrayNotEmpty, IsArray, IsDate, IsDateString, IsEnum, IsInt, IsNotEmpty, IsOptional, IsPositive, IsString, Length, ValidateNested } from "class-validator";
+import { ArrayMinSize, ArrayNotEmpty, arrayNotEmpty, IsArray, IsDate, IsDateString, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, Length, Min, ValidateNested } from "class-validator";
+import { min } from "rxjs";
 import { TaskPriority, TaskStatus } from "src/generated/prisma/enums";
 
-class ProjectConnectDTO {
-  @IsInt()
-  @IsNotEmpty()
-  @IsPositive()
-  id: number;
-}
-
-class ProjectRelationInputDTO {
-  @ValidateNested()
-  @Type(() => ProjectConnectDTO)
-  @IsNotEmpty()
-  connect: ProjectConnectDTO
-}
-
-class UserIDtDTO {
-  @IsInt()
-  @IsNotEmpty()
-  @IsPositive()
-  id: number;
-}
-
-class UserCreateByIDtDTO {
-  @ValidateNested()
-  @IsNotEmpty()
-  @Type(() => UserIDtDTO)
-  connect: UserIDtDTO;
-}
-
-class UserConnectDTO {
-  @ValidateNested()
-  @IsNotEmpty()
-  @Type(() => UserCreateByIDtDTO)
-  user: UserCreateByIDtDTO;
-}
-
-class UserRelationInputDTO {
-  @ValidateNested()
-  @IsNotEmpty()
-  @Type(() => UserConnectDTO)
-  create: UserConnectDTO
-}
-
 export class CreateTaskDto {
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  projectId:number
+
   @IsString()
   @Length(3, 50)
   title: string
@@ -62,19 +27,44 @@ export class CreateTaskDto {
   @Type(() => Date)
   dueDate: string
 
-  @ValidateNested()
-  @Type(() => ProjectRelationInputDTO)
-  @IsNotEmpty()
-  project: ProjectRelationInputDTO
-
-  @IsOptional()
   @IsArray()
-  @ArrayNotEmpty()
   @IsInt({ each: true })
   @IsPositive({ each: true })
-  signedTo: number[]
+  signedTo: number[] 
 
   @IsOptional()
   @IsEnum(TaskStatus)
   status: TaskStatus
+
+}
+
+export class SignedMemberDto{
+  @IsArray()
+  @IsNumber({},{each:true})
+  @Min(0,{each:true})
+  membersIds:number[]
+}
+
+export class TaskFilterDto extends PartialType(OmitType(CreateTaskDto,["title","projectId","description","dueDate"] as const )){
+  @IsOptional()
+  @IsString()
+  search:string = ""
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  take: number = 20
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  skip: number = 0
+
+  @IsOptional()
+  @IsArray()
+  @IsNumber({},{each:true})
+  @Min(0,{each:true})
+  projectIds:number[] = []
 }
