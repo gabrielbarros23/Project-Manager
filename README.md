@@ -92,13 +92,6 @@ erDiagram
 
    
 
-    USER ||--o{ PROJECT_MEMBERS : "belongs to"
-    PROJECT ||--o{ PROJECT_MEMBERS : "has"
-
-    PROJECT ||--o{ TASK : "contains"
-
-    USER ||--o{ TASK_MEMBERS : "assigned"
-    TASK ||--o{ TASK_MEMBERS : "has"
 ```
 
 ## Getting Started
