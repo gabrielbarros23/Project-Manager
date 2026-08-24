@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, BadRequestException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -10,27 +10,30 @@ export class UserController {
 
   @Post()
   @Public()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto) {
+    const userExist = await this.userService.findByEmail(createUserDto.email)
+    if(userExist){
+      throw new BadRequestException("User already exist in database")
+    }
+
+    return await this.userService.create(createUserDto);
   }
 
-  @Get("findall")
-  async findAll() {
-    return await this.userService.findAll();
+  @Patch()
+  async update(@Request() req,@Body() updateUserDto: UpdateUserDto) {
+    const userId = req.user.sub
+    return await this.userService.update(userId, updateUserDto);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+  @Delete()
+  async delete(@Request() req) {
+    const userId = req.user.sub
+    return await this.userService.delete(userId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  @Get()
+  @Public()
+  async findAllUsers(){
+    return await this.userService.findAll()
   }
 }
