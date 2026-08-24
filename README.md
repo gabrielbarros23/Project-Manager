@@ -58,6 +58,12 @@ erDiagram
         DateTime createdAt
         DateTime updatedAt
     }
+    
+    PROJECT_MEMBERS {
+        Int userId
+        Int projectId
+        ProjectRole role
+    }
 
     PROJECT {
         Int id
@@ -67,10 +73,9 @@ erDiagram
         DateTime updatedAt
     }
 
-    PROJECT_MEMBERS {
+     TASK_MEMBERS {
         Int userId
-        Int projectId
-        ProjectRole role
+        Int taskId
     }
 
     TASK {
@@ -85,10 +90,7 @@ erDiagram
         DateTime updatedAt
     }
 
-    TASK_MEMBERS {
-        Int userId
-        Int taskId
-    }
+   
 
     USER ||--o{ PROJECT_MEMBERS : "belongs to"
     PROJECT ||--o{ PROJECT_MEMBERS : "has"
@@ -97,7 +99,6 @@ erDiagram
 
     USER ||--o{ TASK_MEMBERS : "assigned"
     TASK ||--o{ TASK_MEMBERS : "has"
-
 ```
 
 ## Getting Started
