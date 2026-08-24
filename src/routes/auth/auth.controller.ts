@@ -14,16 +14,16 @@ export class AuthController {
     async Login(
         @Res({passthrough:true}) response:express.Response,
         @Body() Credential: LoginAuthDto) {
-        const token = await this.authService.login(Credential);
+        const data = await this.authService.login(Credential);
 
-        response.cookie('access_token', token, {
+        response.cookie('access_token', data.token, {
             httpOnly:true,
             secure:false,
             sameSite: 'lax'
         })
 
         return {
-            message: "Login successful"
+            message: `Login successful ${data.userId}`
         }
     }
 
