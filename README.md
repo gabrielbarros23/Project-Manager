@@ -46,47 +46,58 @@ The application aims to be simple but with well-defined authorization rules.## T
 - Project membership validation
 
 ## SCHEMAS
+
 ```mermaid
+erDiagram
+
     USER {
-        id                Int             
-        email             String          
-        name              String          
-        password          String          
-        createdAt         DateTime        
-        updatedAt         DateTime        
-    }
-            
-    model ProjectMembers {
-        userId    Int
-        projectId Int
-        role      ProjectRole
+        Int id
+        String email
+        String name
+        String password
+        DateTime createdAt
+        DateTime updatedAt
     }
 
     PROJECT {
-        id          Int             
-        title       String          
-        description String          
-        createdAt   DateTime
-        updatedAt   DateTime
+        Int id
+        String title
+        String description
+        DateTime createdAt
+        DateTime updatedAt
     }
 
-    model TaskMembers {
-        userId Int
-        taskId Int
+    PROJECT_MEMBERS {
+        Int userId
+        Int projectId
+        ProjectRole role
     }
 
     TASK {
-        id          Int          
-        title       String       
-        description String       
-        status      TaskStatus   
-        priority    TaskPriority 
-        dueDate     DateTime     
-        projectId   Int          
-        project     Project      
-        createdAt   DateTime     
-        updatedAt   DateTime     
+        Int id
+        String title
+        String description
+        TaskStatus status
+        TaskPriority priority
+        DateTime dueDate
+        Int projectId
+        DateTime createdAt
+        DateTime updatedAt
     }
+
+    TASK_MEMBERS {
+        Int userId
+        Int taskId
+    }
+
+    USER ||--o{ PROJECT_MEMBERS : "belongs to"
+    PROJECT ||--o{ PROJECT_MEMBERS : "has"
+
+    PROJECT ||--o{ TASK : "contains"
+
+    USER ||--o{ TASK_MEMBERS : "assigned"
+    TASK ||--o{ TASK_MEMBERS : "has"
+
 ```
 
 ## Getting Started
