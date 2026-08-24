@@ -1,4 +1,6 @@
-import { IsEnum, IsInt, IsNotEmpty, IsPositive, IsString, Length, MinLength } from "class-validator";
+import { PartialType } from "@nestjs/mapped-types";
+import { Type } from "class-transformer";
+import { IsEnum, IsNotEmpty, IsNumber, IsPositive, IsString, Length, Min, MinLength } from "class-validator";
 import { ProjectRole } from "src/generated/prisma/enums";
 
 export class CreateProjectDto {
@@ -11,30 +13,33 @@ export class CreateProjectDto {
   description: string
 }
 
+
+export class UpdateProjectDto extends PartialType(CreateProjectDto) {}
+
 export class AddUserToProjectDto {
-  @IsInt()
-  @IsPositive()
-  userId: number
-
-  @IsInt()
-  @IsPositive()
+  @IsNumber()
+  @Min(0)
   projectId: number
+
+  @IsNumber()
+  @Min(0)
+  memberId:number
 
   @IsEnum(ProjectRole)
   @IsNotEmpty()
   role: ProjectRole
 }
 
-export class ModifyUserToProjectDto {
-  @IsInt()
-  @IsPositive()
-  userId: number
-
-  @IsInt()
-  @IsPositive()
+export class RemoveMemberDto{
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
   projectId: number
 
-  @IsEnum(ProjectRole)
-  @IsNotEmpty()
-  role: ProjectRole
+  @IsNumber()
+  @Min(0)
+  @Type(() => Number)
+  memberId:number
 }
+
+export class ModifyUserToProjectDto extends AddUserToProjectDto {}

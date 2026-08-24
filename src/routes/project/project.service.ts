@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { AddUserToProjectDto, CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
-import { Prisma, ProjectRole } from 'src/generated/prisma/client';
+import { AddUserToProjectDto, CreateProjectDto, ModifyUserToProjectDto, RemoveMemberDto, UpdateProjectDto } from './dto/create-project.dto';
+import { ProjectRole } from 'src/generated/prisma/client';
 import { PrismaService } from 'src/prisma.service';
+import { SearchProjectDto } from './dto/search-project.dto';
 
 @Injectable()
 export class ProjectService {
   constructor(private readonly prisma: PrismaService) { }
 
-  async create(createProjectDto: Prisma.ProjectCreateInput, userId: number) {
+  async create(createProjectDto: CreateProjectDto, userId: number) {
     return await this.prisma.project.create({
       data: {
         title: createProjectDto.title,
@@ -24,7 +24,37 @@ export class ProjectService {
       },
       include: { members: true }
     })
+  }
 
+  async update(projectId: number, userId:number,updateProjectDto: UpdateProjectDto) {
+    return await this.prisma.project.updateMany({
+      where:{id:projectId,
+        members:{
+          some:{
+            userId:userId,
+            OR:[
+              {role:ProjectRole.OWNER},
+              {role:ProjectRole.ADMIN}
+            ]
+          }
+        }
+      },
+      data:updateProjectDto
+    })
+  }
+
+  async deleteProject(projectId:number,userId:number) {
+    return await this.prisma.project.deleteMany({
+      where:{
+        id:projectId,
+        members:{
+          some:{
+            userId:userId,
+            role:ProjectRole.OWNER
+          }
+        }
+      }
+    })
   }
 
   async addUserToProject(data: AddUserToProjectDto) {
@@ -32,15 +62,15 @@ export class ProjectService {
       data: {
         role: data.role,
         projectId: data.projectId,
-        userId: data.userId,
+        userId:data.memberId,
       },
     })
   }
 
-  async modifyUserRoleToProject(data: AddUserToProjectDto) {
+  async modifyUserRoleToProject(data: ModifyUserToProjectDto) {
     return await this.prisma.projectMembers.update({
       where: {
-        userId_projectId: { userId: data.userId, projectId: data.projectId }
+        userId_projectId: { userId:data.memberId, projectId: data.projectId }
       },
       data: {
         role: data.role,
@@ -56,7 +86,6 @@ export class ProjectService {
           { role: ProjectRole.OWNER },
           { role: ProjectRole.ADMIN }
         ]
-
       }
     })
 
@@ -79,15 +108,66 @@ export class ProjectService {
     })
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} project`;
+  async search(userId:number,searchParams:SearchProjectDto){
+    return await this.prisma.project.findMany({
+      where:{
+        OR:[
+          {title:{contains:searchParams.search}},
+          {description:{contains:searchParams.search}},
+        ],
+        members:{
+          some:{
+            userId:userId,
+            role:searchParams.roleFilter
+          }
+        }
+      },
+      take:searchParams.take,
+      skip:searchParams.skip,
+      include:{members:true}
+    },
+    )
   }
 
-  update(id: number, updateProjectDto: UpdateProjectDto) {
-    return `This action updates a #${id} project`;
+  async getUserProject(userId:number){
+    return await this.prisma.projectMembers.findMany({
+      where:{userId:userId},
+      select:{projectId:true}
+    }).then(response => response.map(data => data.projectId))
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} project`;
+
+  async findOne(userId: number) {
+    return await this.prisma.project.findUnique({
+      where:{id:userId}
+    })
   }
+
+
+  async removeMember(removeMemberDto: RemoveMemberDto) {
+    return await this.prisma.projectMembers.delete({
+      where:{
+        userId_projectId:{
+          projectId:removeMemberDto.projectId,
+          userId:removeMemberDto.memberId
+        }
+      }
+    })
+  }
+
+
+  async isUsersInTheProject(usersId:number[],projectId:number){
+    if(usersId.length == 0){
+      return true
+    }
+
+    return await this.prisma.projectMembers.count({
+      where:{
+        userId:{in: usersId},
+        projectId:projectId
+      }
+    }) === usersId.length ? true : false
+
+  }
+
 }

@@ -1,28 +1,55 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request, UnauthorizedException, BadRequestException, ForbiddenException, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, BadRequestException, ForbiddenException, Put, ParseIntPipe, Query } from '@nestjs/common';
 import { ProjectService } from './project.service';
-import { AddUserToProjectDto, CreateProjectDto, ModifyUserToProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
-import { UserService } from '../user/user.service';
+import { AddUserToProjectDto, CreateProjectDto, ModifyUserToProjectDto as ModifyUserRoleDto, RemoveMemberDto, UpdateProjectDto } from './dto/create-project.dto';
 import { ProjectRole } from 'src/generated/prisma/enums';
+import { Public } from 'src/decorators/public.decorator';
+import { SearchProjectDto } from './dto/search-project.dto';
 
 @Controller('project')
 export class ProjectController {
   constructor(private readonly projectService: ProjectService,
-    private readonly userService: UserService
-  ) { }
+  ) {}
 
+  //create
   @Post()
-  async create(@Request() request,
-    @Body() createProjectDto: CreateProjectDto) {
+  async create(@Request() request, @Body() createProjectDto: CreateProjectDto) {
     const userId = request.user.sub
     return await this.projectService.create(createProjectDto, userId);
   }
 
-  @Post("add-user")
-  async addUserToProject(@Request() request,
-    @Body() body: AddUserToProjectDto) {
+  //update
+  @Patch(':projectId')
+  async update( @Param('projectId',ParseIntPipe) projectId: number, @Request() request, @Body() updateProjectDto: UpdateProjectDto) {
     const userId = request.user.sub
-    const havePermission = await this.projectService.isOwnerOrAdminOfTheProject(userId, body.projectId)
+    return await this.projectService.update(projectId,userId, updateProjectDto);
+  }
+
+  //remove Member
+  @Delete("/removeMember")
+  async removeMember(@Request() request, @Body() removeMemberDto:RemoveMemberDto) {
+    console.log("alo")
+    const userId = request.user.sub
+    const havePermission = await this.projectService.isOwnerOrAdminOfTheProject(userId,removeMemberDto.projectId)
+
+    if (!havePermission) {
+      throw new ForbiddenException("you don't have the permission to remove a user in this project")
+    }
+
+    return await this.projectService.removeMember(removeMemberDto);
+  }
+
+  @Delete(":projectId")
+  async deleteProject(@Request() request, @Param('projectId',ParseIntPipe) projectId: number) {
+    const userId = request.user.sub
+
+    return await this.projectService.deleteProject(projectId,userId);
+  }
+
+  //add user
+  @Post("add-member")
+  async addUserToProject(@Request() request, @Body() body: AddUserToProjectDto) {
+    const requestUserId = request.user.sub
+    const havePermission = await this.projectService.isOwnerOrAdminOfTheProject(requestUserId, body.projectId)
 
     if (!havePermission) {
       throw new ForbiddenException("you don't have the permission to add a user in this project")
@@ -31,9 +58,10 @@ export class ProjectController {
     return await this.projectService.addUserToProject(body);
   }
 
-  @Put("role")
-  async modifyRole(@Request() request,
-    @Body() body: ModifyUserToProjectDto) {
+
+  //modify member role
+  @Put("change-role")
+  async modifyRole(@Request() request, @Body() body: ModifyUserRoleDto) {
     const userId = request.user.sub
     const havePermission = await this.projectService.isOwnerOfTheProject(userId, body.projectId)
 
@@ -42,29 +70,29 @@ export class ProjectController {
     }
 
     if (body.role === ProjectRole.OWNER) {
-      throw new BadRequestException("you can't pass the creator role to another user")
+      throw new BadRequestException("you can't pass the owner role to another user")
     }
 
     return await this.projectService.modifyUserRoleToProject(body);
   }
 
-  @Get()
+
+
+  @Public()
+  @Get("getAll")
   async findAll() {
     return await this.projectService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.projectService.findOne(+id);
+  @Get()
+  async searchMyProjects( @Request() request, @Query() searchParams:SearchProjectDto) {
+    const userId = request.user.sub
+    return await this.projectService.search(userId,searchParams);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectService.update(+id, updateProjectDto);
+  @Get(':projectID')
+  findOne(@Param('projectID',ParseIntPipe) projectID: number) {
+    return this.projectService.findOne(projectID);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.projectService.remove(+id);
-  }
 }
